@@ -45,9 +45,8 @@ python test_fdg_img_k.py
 python test_fdg_ki_vb.py 
 ```
 
-# FMZ
-Set up FMZ in the same way as the above FDG settings, and at least change the file names.
-
+# 
+Other tracers besides FDG can be selected, but attention should be paid to the relevant parameter settings and network loss settings.
 
 ### Other Related Projects
 <div align="center"><img src="https://github.com/yqx7150/PET_AC_sCT/blob/main/samples/algorithm-overview.png" width = "800" height = "500"> </div>
