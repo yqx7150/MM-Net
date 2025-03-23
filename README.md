@@ -21,7 +21,7 @@ Dynamic positron emission tomography (PET) images can reveal the distribution of
 
 # Dataset
 
-You need to prepare at least one type of dynamic PET data, as shown in the "data" folder, which includes "CP", "test", and "train". The "train" and "test" folders contain the original noise-free data "fdg_3D", as well as the data with added noise "fdg_3D_noise", the kinetic parameters k1, k2, k3, k4, and the corresponding ki and vb. Similarly, you need to make references at the corresponding positions in the training file. For example, at the "--root1" position, you need to fill in the address of the training dataset, and at the "--root2" position, you need to fill in the address of the test dataset.
+You need to prepare at least one type of dynamic PET data and create a 'data' folder that includes subfolders' CP ',' test ', and' train '. The "train" and "test" folders contain the original noise free data "fdg23D", as well as the noisy data "fdg.3D_noise", dynamic parameters k1, k2, k3, k4, and corresponding ki and VB. The "CP" folder holds the corresponding arterial blood input function. Similarly, you need to reference it in the corresponding location in the training file. For example, in the "-- root1" position, you need to fill in the address of the training dataset, while in the "-- root2" position, you need to fill in the location of the testing dataset.
 
 #  Train
 
