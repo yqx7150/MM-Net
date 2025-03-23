@@ -26,7 +26,7 @@ You need to prepare at least one type of dynamic PET data and create a 'data' fo
 #  Train
 
 ```python
-python train.fdg.py 
+python train_fdg.py 
 ```
 
 ##  resume training:
