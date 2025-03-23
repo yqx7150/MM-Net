@@ -256,14 +256,7 @@ def save_img(img, img_path):
 
 
 def normalize_array(arr):
-    """
-    最大最小值归一化 对(128,128,18)
-    Args:
-        arr:
-
-    Returns:
-
-    """
+    
     arr_min = np.min(arr)
     arr_max = np.max(arr)
     if arr_max == arr_min:
@@ -275,14 +268,7 @@ def normalize_array(arr):
 
 
 def get_mean_k_data_torch(reconstruct_for):
-    """
-    对numpy类型的数据进行解耦,将(1,48,128,128)的数据-->4 x (1,12,128,128)然后进行平均
-    Args:
-        reconstruct_for:网络的预测K值(1,48,128,128)
-
-    Returns:预测的k1,k2,k3,k4   4 x (128x128)
-
-    """
+   
     k1, k2, k3, k4 = torch.split(reconstruct_for, 12, dim=1)
     pred_k1 = torch.mean(k1.squeeze(), dim=0)
     pred_k2 = torch.mean(k2.squeeze(), dim=0)
@@ -293,14 +279,7 @@ def get_mean_k_data_torch(reconstruct_for):
 
 
 def get_mean_k_data(reconstruct_for):
-    """
-    # get_mean_k_data_np的tensor版本
-    Args:
-        reconstruct_for:
-
-    Returns:
-
-    """
+   
     k1, k2, k3, k4 = torch.split(reconstruct_for, 12, dim=1)
     pred_k1 = torch.mean(k1.squeeze(), dim=0)
     pred_k2 = torch.mean(k2.squeeze(), dim=0)
@@ -310,14 +289,7 @@ def get_mean_k_data(reconstruct_for):
 
 
 def get_mean_k_data_27(reconstruct_for):
-    """
-    # get_mean_k_data_np的tensor版本
-    Args:
-        reconstruct_for:
-
-    Returns:
-
-    """
+  
     k1, k2, k3, k4 = torch.split(reconstruct_for, 21, dim=1)
     pred_k1 = torch.mean(k1.squeeze(), dim=0)
     pred_k2 = torch.mean(k2.squeeze(), dim=0)
@@ -326,15 +298,7 @@ def get_mean_k_data_27(reconstruct_for):
     return pred_k1, pred_k2, pred_k3, pred_k4
 
 def compare_ms_ssim(pred, target):
-    """
-    对数据求ms_ssim指标
-    Args:
-        pred:
-        target:
-
-    Returns:
-
-    """
+   
     pred = tf.convert_to_tensor(pred)
     pred = tf.expand_dims(pred, axis=-1)
 
@@ -350,15 +314,7 @@ def compare_ms_ssim(pred, target):
 
 
 def compute_mean_loss(reconstruct_for, target_forward_data):
-    """
-    计算每个预测的k值和实际值的loss
-    Args:
-        reconstruct_for:
-        target_forward_data:
-
-    Returns:
-
-    """
+   
     pred_k1, pred_k2, pred_k3, pred_k4 = get_mean_k_data(reconstruct_for)
     k1, k2, k3, k4 = get_mean_k_data(target_forward_data)  # torch.Size([1, 12, 128, 128])
     loss_k1 = F.mse_loss(pred_k1, k1)
@@ -369,15 +325,7 @@ def compute_mean_loss(reconstruct_for, target_forward_data):
 
 
 def compute_mean_loss_rev(reconstruct_for, target_forward_data):
-    """
-    计算每个预测的输入值和实际值的输入之间的loss
-    Args:
-        reconstruct_for:
-        target_forward_data:
-
-    Returns:
-
-    """
+  
 
     pred_data1, pred_data2, pred_data3, pred_data4 = torch.split(reconstruct_for, 12, dim=1)
 
@@ -389,14 +337,7 @@ def compute_mean_loss_rev(reconstruct_for, target_forward_data):
 
 
 def normalize_tensor_torch(tensor):
-    """
-    最大最小值归一化 对 (128, 128, 18) 的 PyTorch 张量
-    Args:
-        tensor: PyTorch 张量
-
-    Returns:
-        normalize_tensor: 归一化后的 PyTorch 张量
-    """
+  
     tensor_min = torch.min(tensor)
     tensor_max = torch.max(tensor)
 
@@ -410,16 +351,7 @@ def normalize_tensor_torch(tensor):
 
 
 def update_tracer_concentration_np(reconstruct_for_k_data, cp_data, number):
-    """
-    由预测的k1,k2,k3,k4生成预测的TAC曲线
-    Args:
-        reconstruct_for_k_data:
-        cp_data:
-        number:
-
-    Returns:
-
-    """
+   
     k1, k2, k3, k4 = get_mean_k_data_np(reconstruct_for_k_data)  # 128x128
     
 
@@ -497,16 +429,7 @@ def calculate_xm(tms, tme, CPET, lmbda):
 
 
 def calculate_img_np(reconstruct_for_k_data, sampling_intervals, cp_data):
-    """
-
-    Args:
-        reconstruct_for_k_data: 网络预测的结果
-        sampling_intervals: 采样协议
-        cp_data:血浆
-
-    Returns:预测的18帧图像
-
-    """
+  
     
     reconstruct_for_k_data = reconstruct_for_k_data.cpu().detach().numpy()  
 
@@ -528,16 +451,7 @@ def calculate_img_np(reconstruct_for_k_data, sampling_intervals, cp_data):
 
 
 def calculate_img_np27(reconstruct_for_k_data, sampling_intervals, cp_data):
-    """
-
-    Args:
-        reconstruct_for_k_data: 网络预测的结果
-        sampling_intervals: 采样协议
-        cp_data:血浆
-
-    Returns:预测的18帧图像
-
-    """
+    
   
     reconstruct_for_k_data = reconstruct_for_k_data.cpu().detach().numpy()  
 
@@ -601,16 +515,7 @@ def calculate_logan_img(reconstruct_for_k_data, target_forward_k_data, sampling_
     return pred, target
 
 def update_tracer_concentration_torch(reconstruct_for_k_data, cp_data, number):
-    """
-    由预测的k1,k2,k3,k4生成预测的TAC曲线
-    Args:
-        reconstruct_for_k_data:1,48,128,128
-        cp_data:
-        number:
-
-    Returns:
-
-    """
+   
   
     k1 = reconstruct_for_k_data[:, :, 0]
     k2 = reconstruct_for_k_data[:, :, 1]
@@ -684,20 +589,7 @@ def update_tracer_concentration_torch(reconstruct_for_k_data, cp_data, number):
 
 
 def calculate_img_logan3_no_weight_test(reconstruct_for_k_data, target_forward_k_data, sampling_intervals, cp_data):
-    """
-        logan_no_weight,loss不加权重
-        对后10帧的数据进行计算logan分析损失：y=ax+b方式
-        Args:
-            reconstruct_for_k_data:网络输出的k1-k4结果
-            target_forward_k_data:实际的k1-k4结果
-            sampling_intervals:采样协议
-            cp_data:血浆数据
-            ki_data_btach:logan分析中的斜率
-            vb_data_batch:logan分析中的截距
-
-        Returns:预测的和实际的logan分析
-
-        """
+   
     CP_FMZ = torch.from_numpy(cp_data).cuda()
 
    

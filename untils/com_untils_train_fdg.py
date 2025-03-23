@@ -11,14 +11,7 @@ import torch.fft
 
 
 def normalize_array(arr):
-    """
-    最大最小值归一化 对(128,128,18)
-    Args:
-        arr:
-
-    Returns:
-
-    """
+ 
     arr_min = np.min(arr)
     arr_max = np.max(arr)
     if arr_max == arr_min:
@@ -30,14 +23,7 @@ def normalize_array(arr):
 
 
 def get_mean_k_data_torch(reconstruct_for):
-    """
-    对numpy类型的数据进行解耦,将(1,48,128,128)的数据-->4 x (1,12,128,128)然后进行平均
-    Args:
-        reconstruct_for:网络的预测K值(1,48,128,128)
 
-    Returns:预测的k1,k2,k3,k4   4 x (128x128)
-
-    """
    
     k1, k2, k3, k4 = torch.split(reconstruct_for, 12, dim=1)
 
@@ -49,14 +35,7 @@ def get_mean_k_data_torch(reconstruct_for):
     return pred_k1, pred_k2, pred_k3, pred_k4
 
 def get_mean_k_data_torch_27(reconstruct_for):
-    """
-    对numpy类型的数据进行解耦,将(1,48,128,128)的数据-->4 x (1,12,128,128)然后进行平均
-    Args:
-        reconstruct_for:网络的预测K值(1,48,128,128)
 
-    Returns:预测的k1,k2,k3,k4   4 x (128x128)
-
-    """
 
     k1, k2, k3, k4 = torch.split(reconstruct_for, 21, dim=1)
 
@@ -69,14 +48,7 @@ def get_mean_k_data_torch_27(reconstruct_for):
 
 
 def get_mean_k_data_torch_92(reconstruct_for):
-    """
-    对numpy类型的数据进行解耦,将(1,48,128,128)的数据-->4 x (1,12,128,128)然后进行平均
-    Args:
-        reconstruct_for:网络的预测K值(1,48,128,128)
 
-    Returns:预测的k1,k2,k3,k4   4 x (128x128)
-
-    """
  
     k1, k2, k3, k4 = torch.split(reconstruct_for, 62, dim=1)
 
@@ -89,15 +61,7 @@ def get_mean_k_data_torch_92(reconstruct_for):
 
 
 def compare_ms_ssim(pred, target):
-    """
-    对数据求ms_ssim指标
-    Args:
-        pred:
-        target:
-
-    Returns:
-
-    """
+ 
     pred = tf.convert_to_tensor(pred)
     pred = tf.expand_dims(pred, axis=-1)
 
@@ -113,15 +77,7 @@ def compare_ms_ssim(pred, target):
 
 
 def compute_mean_loss(reconstruct_for, target_forward_data, mse_loss=False):
-    """
-    计算每个预测的k值和实际值的loss
-    Args:
-        reconstruct_for:
-        target_forward_data:
-
-    Returns:
-
-    """
+ 
     pred_k1, pred_k2, pred_k3, pred_k4 = get_mean_k_data_torch(reconstruct_for)
     k1, k2, k3, k4 = get_mean_k_data_torch(target_forward_data)  # torch.Size([1, 12, 128, 128])
     if mse_loss:
@@ -139,15 +95,8 @@ def compute_mean_loss(reconstruct_for, target_forward_data, mse_loss=False):
 
 
 def compute_mean_loss_92(reconstruct_for, target_forward_data, mse_loss=False):
-    """
-    计算每个预测的k值和实际值的loss
-    Args:
-        reconstruct_for:
-        target_forward_data:
-
-    Returns:
-
-    """
+   
+   
     pred_k1, pred_k2, pred_k3, pred_k4 = get_mean_k_data_torch_92(reconstruct_for)
     k1, k2, k3, k4 = get_mean_k_data_torch_92(target_forward_data)  # torch.Size([1, 12, 128, 128])
     if mse_loss:
@@ -165,15 +114,7 @@ def compute_mean_loss_92(reconstruct_for, target_forward_data, mse_loss=False):
 
 
 def compute_mean_loss_27(reconstruct_for, target_forward_data, mse_loss=False):
-    """
-    计算每个预测的k值和实际值的loss
-    Args:
-        reconstruct_for:
-        target_forward_data:
 
-    Returns:
-
-    """
     pred_k1, pred_k2, pred_k3, pred_k4 = get_mean_k_data_torch_27(reconstruct_for)
     k1, k2, k3, k4 = get_mean_k_data_torch_27(target_forward_data)  # torch.Size([1, 12, 128, 128])
     if mse_loss:
@@ -190,15 +131,7 @@ def compute_mean_loss_27(reconstruct_for, target_forward_data, mse_loss=False):
     return loss_k1, loss_k2, loss_k3, loss_k4
 
 def compute_mean_loss_rev(reconstruct_for, target_forward_data, mse_loss=False):
-    """
-    计算每个预测的输入值和实际值的输入之间的loss
-    Args:
-        reconstruct_for:
-        target_forward_data:
 
-    Returns:
-
-    """
 
     pred_data1, pred_data2, pred_data3, pred_data4 = torch.split(reconstruct_for, 12, dim=1)
     if mse_loss:
@@ -217,15 +150,7 @@ def compute_mean_loss_rev(reconstruct_for, target_forward_data, mse_loss=False):
 
 
 def compute_mean_loss_rev_92(reconstruct_for, target_forward_data, mse_loss=False):
-    """
-    计算每个预测的输入值和实际值的输入之间的loss
-    Args:
-        reconstruct_for:
-        target_forward_data:
-
-    Returns:
-
-    """
+  
 
     pred_data1, pred_data2, pred_data3, pred_data4 = torch.split(reconstruct_for, 62, dim=1)
     if mse_loss:
@@ -242,15 +167,7 @@ def compute_mean_loss_rev_92(reconstruct_for, target_forward_data, mse_loss=Fals
     return rev_loss1, rev_loss2, rev_loss3, rev_loss4
 
 def compute_mean_loss_rev_27(reconstruct_for, target_forward_data, mse_loss=False):
-    """
-    计算每个预测的输入值和实际值的输入之间的loss
-    Args:
-        reconstruct_for:
-        target_forward_data:
-
-    Returns:
-
-    """
+    
 
     pred_data1, pred_data2, pred_data3, pred_data4 = torch.split(reconstruct_for, 21, dim=1)
     if mse_loss:
@@ -269,14 +186,7 @@ def compute_mean_loss_rev_27(reconstruct_for, target_forward_data, mse_loss=Fals
 
 
 def normalize_tensor_torch(tensor):
-    """
-    最大最小值归一化 对 (128, 128, 18) 的 PyTorch 张量
-    Args:
-        tensor: PyTorch 张量
-
-    Returns:
-        normalize_tensor: 归一化后的 PyTorch 张量
-    """
+   
     tensor_min = torch.min(tensor)
     tensor_max = torch.max(tensor)
 
@@ -290,17 +200,7 @@ def normalize_tensor_torch(tensor):
 
 
 def update_tracer_concentration_torch(reconstruct_for_k_data, cp_data, number):
-    """
-    由预测的k1,k2,k3,k4生成预测的TAC曲线
-    Args:
-        reconstruct_for_k_data:1,48,128,128
-        cp_data:
-        number:
-
-    Returns:
-
-    """
-   
+ 
     k1, k2, k3, k4 = get_mean_k_data_torch(reconstruct_for_k_data)  
     k4 = torch.zeros(128, 128, dtype=torch.float32).cuda()
    
@@ -365,16 +265,7 @@ def update_tracer_concentration_torch(reconstruct_for_k_data, cp_data, number):
     return CT
 
 def update_tracer_concentration_torch_27(reconstruct_for_k_data, cp_data, number):
-    """
-    由预测的k1,k2,k3,k4生成预测的TAC曲线
-    Args:
-        reconstruct_for_k_data:1,48,128,128
-        cp_data:
-        number:
-
-    Returns:
-
-    """
+  
    
     k1, k2, k3, k4 = get_mean_k_data_torch_27(reconstruct_for_k_data)  
 
@@ -465,13 +356,7 @@ def calculate_xm_torch(tms, tme, CPET, lmbda):
 
 
 def calculate_img_torch(reconstruct_for_k_data, sampling_intervals, cp_data):
-    """
-    由CP(t)和CT(t)，采样协议，计算18帧的数据
-    :param sampling_intervals:
-    :param cp_data:
-    :param CT:
-    :return:
-    """
+   
   
     CP_FMZ = cp_data
     CT_FMZ = update_tracer_concentration_torch(reconstruct_for_k_data, CP_FMZ, 0)
@@ -488,13 +373,7 @@ def calculate_img_torch(reconstruct_for_k_data, sampling_intervals, cp_data):
 
 
 def calculate_img_torch_27(reconstruct_for_k_data, sampling_intervals, cp_data):
-    """
-    由CP(t)和CT(t)，采样协议，计算18帧的数据
-    :param sampling_intervals:
-    :param cp_data:
-    :param CT:
-    :return:
-    """
+   
   
     CP_FMZ = cp_data
     CT_FMZ = update_tracer_concentration_torch_27(reconstruct_for_k_data, CP_FMZ, 0)
@@ -511,20 +390,7 @@ def calculate_img_torch_27(reconstruct_for_k_data, sampling_intervals, cp_data):
 
 
 def calculate_img_patlak3_no_weight_92(reconstruct_for_k_data, target_forward_k_data, sampling_intervals, cp_data):
-    """
-        logan_no_weight,loss不加权重
-        对后10帧的数据进行计算logan分析损失：y=ax+b方式
-        Args:
-            reconstruct_for_k_data:网络输出的k1-k4结果
-            target_forward_k_data:实际的k1-k4结果
-            sampling_intervals:采样协议
-            cp_data:血浆数据
-            ki_data_btach:logan分析中的斜率
-            vb_data_batch:logan分析中的截距
-
-        Returns:预测的和实际的logan分析
-
-        """
+   
     CP_FMZ = torch.from_numpy(cp_data).cuda()
 
     pred_CT_FMZ = update_tracer_concentration_torch(reconstruct_for_k_data, CP_FMZ, 0)
@@ -581,20 +447,7 @@ def calculate_img_patlak3_no_weight_92(reconstruct_for_k_data, target_forward_k_
     return K_values, b_values
 
 def calculate_img_patlak3_no_weight_27(reconstruct_for_k_data, target_forward_k_data, sampling_intervals, cp_data):
-    """
-        logan_no_weight,loss不加权重
-        对后10帧的数据进行计算logan分析损失：y=ax+b方式
-        Args:
-            reconstruct_for_k_data:网络输出的k1-k4结果
-            target_forward_k_data:实际的k1-k4结果
-            sampling_intervals:采样协议
-            cp_data:血浆数据
-            ki_data_btach:logan分析中的斜率
-            vb_data_batch:logan分析中的截距
-
-        Returns:预测的和实际的logan分析
-
-        """
+   
     CP_FMZ = torch.from_numpy(cp_data).cuda()
 
     pred_CT_FMZ = update_tracer_concentration_torch_27(reconstruct_for_k_data, CP_FMZ, 0)
@@ -713,7 +566,7 @@ def calculate_img_patlak3_no_weight(reconstruct_for_k_data, target_forward_k_dat
 def calculate_img_patlak2_no_weight(reconstruct_for_k_data, target_forward_k_data, sampling_intervals, cp_data,
                                     ki_data_batch,
                                     vb_data_batch):
-
+   
     CP_FMZ = torch.from_numpy(cp_data).cuda()
 
     pred_CT_FMZ = update_tracer_concentration_torch(reconstruct_for_k_data, CP_FMZ, 0)
@@ -822,8 +675,7 @@ def calculate_img_patlak3_no_weight_real_data(reconstruct_for_k_data, sampling_i
 
 
 def calculate_img_patlak3_no_weight_test(reconstruct_for_k_data, target_forward_k_data, sampling_intervals, cp_data):
-  
-    
+   
     CP_FMZ = torch.from_numpy(cp_data).cuda()
 
     target_CT_FMZ = update_tracer_concentration_torch(target_forward_k_data, CP_FMZ, 0)
@@ -881,20 +733,7 @@ def calculate_img_patlak3_no_weight_test(reconstruct_for_k_data, target_forward_
     return K_values, b_values
 
 def calculate_img_patlak3_no_weight_test_27(reconstruct_for_k_data, target_forward_k_data, sampling_intervals, cp_data):
-    """
-        logan_no_weight,loss不加权重
-        对后10帧的数据进行计算logan分析损失：y=ax+b方式
-        Args:
-            reconstruct_for_k_data:网络输出的k1-k4结果
-            target_forward_k_data:实际的k1-k4结果
-            sampling_intervals:采样协议
-            cp_data:血浆数据
-            ki_data_btach:logan分析中的斜率
-            vb_data_batch:logan分析中的截距
-
-        Returns:预测的和实际的logan分析
-
-        """
+    
     CP_FMZ = torch.from_numpy(cp_data).cuda()
 
   
