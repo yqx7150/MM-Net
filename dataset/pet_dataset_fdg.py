@@ -35,7 +35,6 @@ class PetDataset(Dataset):
         k2_data_new = np.tile(k2_data[:, :, np.newaxis], 12)
         k3_data_new = np.tile(k3_data[:, :, np.newaxis], 12)
         k4_data_new = np.tile(k4_data[:, :, np.newaxis], 12)
-        # k4_data_new = k3_data_new
 
         return fdg_data, fdg_noise_data, k1_data_new, k2_data_new, k3_data_new, k4_data_new, ki_data, vb_data
 

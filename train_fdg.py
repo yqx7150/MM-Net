@@ -79,11 +79,11 @@ def main(args):
             train_dataloader):  
             step_time = time.time()
 
-            target_forward_fdg = fdg_noise_batch.permute(0, 3, 1, 2).float().cuda()  #
-            target_forward_k1_data = k1_data_batch.permute(0, 3, 1, 2).float().cuda()  # [1,12,128,128]
-            target_forward_k2_data = k2_data_batch.permute(0, 3, 1, 2).float().cuda()  # [1,12,128,128]
-            target_forward_k3_data = k3_data_batch.permute(0, 3, 1, 2).float().cuda()  # [1,12,128,128]
-            target_forward_k4_data = k4_data_batch.permute(0, 3, 1, 2).float().cuda()  # [1,12,128,128]
+            target_forward_fdg = fdg_noise_batch.permute(0, 3, 1, 2).float().cuda()  
+            target_forward_k1_data = k1_data_batch.permute(0, 3, 1, 2).float().cuda()  
+            target_forward_k2_data = k2_data_batch.permute(0, 3, 1, 2).float().cuda()  
+            target_forward_k3_data = k3_data_batch.permute(0, 3, 1, 2).float().cuda()  
+            target_forward_k4_data = k4_data_batch.permute(0, 3, 1, 2).float().cuda()  
 
             target_forward_k_data = torch.cat(
                 (target_forward_k1_data, target_forward_k2_data, target_forward_k3_data, target_forward_k4_data), dim=1)

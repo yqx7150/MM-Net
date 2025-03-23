@@ -14,17 +14,14 @@ from tqdm import tqdm
 import tensorflow as tf
 from dataset.pet_dataset_fdg import PetDataset
 from model.model_new import MultiOutputReversibleGenerator
-#from untils.com_untils_test import compare_psnr_show_save
 from untils.com_untils_test import save_img
 
-# from untils.utils_metric import calculate_ms_ssim, calculate_nrmse
 
 os.environ['CUDA_VISIBLE_DEVICES'] = "2"
 
 
 def main():
-    # ======================================define the model============================================
-    # 配置信息
+
     CP_PATH = './data/fdg_zubal_head_sample3_kmin_noise_0423/CP/CP_FDG.mat'
     root2 = "./data/fdg_zubal_head_sample3_kmin_noise_0423/test"
     sampling_intervals = [30, 30, 30, 30, 120, 120, 120, 120, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300]
@@ -44,11 +41,10 @@ def main():
         net = MultiOutputReversibleGenerator(input_channels=24, output_channels=24, num_blocks=8)
         
         device = torch.device("cuda:0")
-        net.to(device)  # 将模型加载到相应的设备中
+        net.to(device) 
         net.eval()
-        # load the pretrained weight if there exists one
         if os.path.isfile(ckpt):
-            net.load_state_dict(torch.load(ckpt), strict=False)  # 加载模型参数
+            net.load_state_dict(torch.load(ckpt), strict=False)  
             print("[INFO] Loaded checkpoint: {}".format(ckpt))
 
         print("[INFO] Start data load and preprocessing")
@@ -74,7 +70,7 @@ def main():
         for i_batch, (
                 fdg_batch, fdg_noise_batch, k1_data_batch, k2_data_batch, k3_data_batch, k4_data_batch, ki_data_btach,
                 vb_data_batch) in enumerate(
-            tqdm(test_dataloader)):  # tqdm是一个可以显示进度条的模块。enumerate()函数是python的内置函数，可以同时遍历lt中元素及其索引，i是索引，item是lt中的元素。
+            tqdm(test_dataloader)):  
             k_data_batch = torch.cat(
                 (k1_data_batch.squeeze()[:, :, 0].unsqueeze(2), k2_data_batch.squeeze()[:, :, 0].unsqueeze(2),
                  k3_data_batch.squeeze()[:, :, 0].unsqueeze(2),
@@ -84,10 +80,10 @@ def main():
             fdg_input = input_fdg[:, 0:12, :, :]
             fdg_input = torch.cat([fdg_input, fdg_input], dim=1)
 
-            with torch.no_grad():  # 在该模块下，所有计算得出的tensor的requires_grad都自动设置为False。当requires_grad设置为False时,反向传播时就不会自动求导了，因此大大节约了显存或者说内存。
-                reconstruct_for = net(fdg_input)  # hybrid_input [1,2,18,128,128]
+            with torch.no_grad():  
+                reconstruct_for = net(fdg_input)  
             reconstruct_for = torch.abs(reconstruct_for)
-            reconstruct_for = torch.clamp(reconstruct_for, 0, 1)  # torch.Size([1, 96, 128, 128])
+            reconstruct_for = torch.clamp(reconstruct_for, 0, 1)  
             k1, k2, k3, k4 = get_mean_k_data(reconstruct_for)
             k4 = torch.zeros_like(k4).cuda()
 
@@ -98,7 +94,7 @@ def main():
 
             for i in range(3):
                 psnr_fdg = compare_psnr(255 * abs(pred_fdg_k[:, :, i]), 255 * abs(target_fdg_k[:, :, i]),
-                                        data_range=255)  # abs()函数返回数字的绝对值。
+                                        data_range=255) 
                 ssim_fdg = compare_ssim(abs(target_fdg_k[:, :, i]), abs(pred_fdg_k[:, :, i]), data_range=1)
                 mse_fdg = compare_mse(abs(target_fdg_k[:, :, i]), abs(pred_fdg_k[:, :, i]))
                 ms_ssim_fdg = compare_ms_ssim(abs(target_fdg_k[:, :, i]), abs(pred_fdg_k[:, :, i]))
@@ -106,7 +102,6 @@ def main():
                     nrmse_fdg = compare_nrmse(abs(target_fdg_k[:, :, i]), abs(pred_fdg_k[:, :, i]))
                 else:
                     nrmse_fdg = 0
-                # nrmse_fdg = calculate_nrmse(abs(target_fdg_k[:, :, i]), abs(pred_fdg_k[:, :, i]))
 
                 PSNR_FDG.append(psnr_fdg)
                 SSIM_FDG.append(ssim_fdg)
@@ -114,9 +109,8 @@ def main():
                 MSE_FDG.append(mse_fdg)
                 NRMSE_FDG.append(nrmse_fdg)
 
-                #  保存 result
                 os.makedirs(save_path + '/k/pred_fdg_k',
-                            exist_ok=True)  # 递归创建目录，题中应有之意即路径中哪一层不存在，则自动创建。如果exist_ok是False（默认），当目标目录（即要创建的目录）已经存在，会抛出一个OSError。
+                            exist_ok=True)  
                 os.makedirs(save_path + '/k/target_fdg_k', exist_ok=True)
                 os.makedirs(save_path + '/k/pred_fdg_k_mat', exist_ok=True)
                 os.makedirs(save_path + '/k/target_fdg_k_mat', exist_ok=True)
@@ -133,21 +127,19 @@ def main():
                     save_path + '/k/pred_fdg_k_mat' + '/pred_fdg_' + str(i_batch + 1) + '_' + str(i + 1) + '.mat',
                     {'data': pred_fdg_k[:, :, i]})
 
-            ## img
-            # pred_data = calculate_img_torch(reconstruct_for, sampling_intervals, cp_data)
+         
             target_fdg_k = torch.from_numpy(target_fdg_k)
-            pred_data = calculate_img_np(reconstruct_for, sampling_intervals, cp_data)  # 128x128x18
+            pred_data = calculate_img_np(reconstruct_for, sampling_intervals, cp_data) 
 
-            # pred_data = calculate_img_np(target_fdg_k, sampling_intervals, cp_data)  # 128x128x18
 
-            target_forward_fdg_label = target_forward_fdg_label.squeeze().permute(1, 2, 0)  # 128x128x18
+            target_forward_fdg_label = target_forward_fdg_label.squeeze().permute(1, 2, 0)  
             pred_data = pred_data[:, :, 12:18]
             target_forward_fdg_label = target_forward_fdg_label[:, :, 12:18].cpu().numpy()
             mask = target_forward_fdg_label == 0
             pred_data[mask] = 0
             for i in range(6):
                 psnr_fdg_img = compare_psnr(255 * abs(target_forward_fdg_label[:, :, i]), 255 * abs(pred_data[:, :, i]),
-                                            data_range=255)  # abs()函数返回数字的绝对值。
+                                            data_range=255)  
                 ssim_fdg_img = compare_ssim(abs(target_forward_fdg_label[:, :, i]), abs(pred_data[:, :, i]),
                                             data_range=1)
                 mse_fdg_img = compare_mse(abs(target_forward_fdg_label[:, :, i]), abs(pred_data[:, :, i]))
@@ -163,9 +155,8 @@ def main():
                 MSE_FDG_IMG.append(mse_fdg_img)
                 NRMSE_FDG_IMG.append(nrmse_fdg_img)
 
-                #  保存 result
                 os.makedirs(save_path + '/img/pred_fdg_img',
-                            exist_ok=True)  # 递归创建目录，题中应有之意即路径中哪一层不存在，则自动创建。如果exist_ok是False（默认），当目标目录（即要创建的目录）已经存在，会抛出一个OSError。
+                            exist_ok=True) 
                 os.makedirs(save_path + '/img/target_fdg_img', exist_ok=True)
                 os.makedirs(save_path + '/img/pred_fdg_mat', exist_ok=True)
                 os.makedirs(save_path + '/img/target_fdg_mat', exist_ok=True)
@@ -258,18 +249,8 @@ def get_mean_k_data(reconstruct_for):
 
 
 def calculate_img_np(reconstruct_for_k_data, sampling_intervals, cp_data):
-    """
-
-    Args:
-        reconstruct_for_k_data: 网络预测的结果
-        sampling_intervals: 采样协议
-        cp_data:血浆
-
-    Returns:预测的18帧图像
-
-    """
-    # 由预测的k1-k4 图像和已知的Cp数据生成预测的18帧的数据
-    reconstruct_for_k_data = reconstruct_for_k_data.cpu().detach().numpy()  # 128,128,12
+    
+    reconstruct_for_k_data = reconstruct_for_k_data.cpu().detach().numpy() 
 
     CP_FDG = cp_data
     pred_CT_FDG = update_tracer_concentration_np(reconstruct_for_k_data, CP_FDG)
@@ -284,7 +265,6 @@ def calculate_img_np(reconstruct_for_k_data, sampling_intervals, cp_data):
         start_index = end_index + 1
 
     pred_fdg = f_FDG / np.max(f_FDG)
-    # pred_fdg = torch.from_numpy(pred_fdg)
     return pred_fdg
 
 
@@ -298,15 +278,7 @@ def get_mean_k_data_np(reconstruct_for):
 
 
 def compare_ms_ssim(pred, target):
-    """
-    对数据求ms_ssim指标
-    Args:
-        pred:
-        target:
-
-    Returns:
-
-    """
+   
     pred = tf.convert_to_tensor(pred)
     pred = tf.expand_dims(pred, axis=-1)
 
@@ -322,17 +294,9 @@ def compare_ms_ssim(pred, target):
 
 
 def update_tracer_concentration_np(reconstruct_for_k_data, cp_data):
-    """
-    由预测的k1,k2,k3,k4生成预测的TAC曲线
-    Args:
-        reconstruct_for_k_data:
-        cp_data:
+   
 
-    Returns:
-
-    """
-
-    k1, k2, k3, k4 = get_mean_k_data_np(reconstruct_for_k_data)  # 128x12
+    k1, k2, k3, k4 = get_mean_k_data_np(reconstruct_for_k_data)  
 
     k1 = k1.squeeze()
     k2 = k2.squeeze()
@@ -347,45 +311,32 @@ def update_tracer_concentration_np(reconstruct_for_k_data, cp_data):
 
     cp_fdg = np.array(cp_data[0].tolist())
     discriminant = (k2 + k3 + k4) ** 2 - 4 * k2 * k4
-    discriminant = np.maximum(discriminant, 0)  # 将负值替换为零
+    discriminant = np.maximum(discriminant, 0)  
     alpha1 = (k2 + k3 + k4 - np.sqrt(discriminant)) / 2
     alpha2 = (k2 + k3 + k4 + np.sqrt(discriminant)) / 2
 
     mask = (alpha2 - alpha1) != 0
-    # 计算 a
     a = np.zeros_like(k1)
     a[mask] = k1[mask] * (k3[mask] + k4[mask] - alpha1[mask]) / (alpha2[mask] - alpha1[mask])
-    # 计算 b
     b = np.zeros_like(k1)
     b[mask] = k1[mask] * (alpha2[mask] - k3[mask] - k4[mask]) / (alpha2[mask] - alpha1[mask])
 
-    # alpha1 = (k2 + k3 + k4 - np.sqrt((k2 + k3 + k4) ** 2 - 4 * k2 * k4)) / 2
-    # alpha2 = (k2 + k3 + k4 + np.sqrt((k2 + k3 + k4) ** 2 - 4 * k2 * k4)) / 2
-    # a = k1 * (k3 + k4 - alpha1) / (alpha2 - alpha1)  # a: 128*128
-    # b = k1 * (alpha2 - k3 - k4) / (alpha2 - alpha1)
-
+   
     T = len(cp_fdg)
-    array = np.arange(1, T + 1)  # array:(3600,)
-    array = array.reshape((1, 1, T))  # 1*1*3600
-    a = np.repeat(a[:, :, np.newaxis], T, axis=2)  # a: 128*128*3600
-    b = np.repeat(b[:, :, np.newaxis], T, axis=2)  # b: 128*128*3600
+    array = np.arange(1, T + 1) 
+    array = array.reshape((1, 1, T)) 
+    a = np.repeat(a[:, :, np.newaxis], T, axis=2)  
+    b = np.repeat(b[:, :, np.newaxis], T, axis=2)  
 
     alpha1 = np.repeat(alpha1[:, :, np.newaxis], T, axis=2)
     alpha2 = np.repeat(alpha2[:, :, np.newaxis], T, axis=2)
-    part11 = a * cp_fdg  # (128*128*3600)
-    part12 = np.exp(-alpha1 * array)  # (128*128*3600)
+    part11 = a * cp_fdg  
+    part12 = np.exp(-alpha1 * array)  
 
-    part21 = b * cp_fdg  # (128*128*3600)
-    part22 = np.exp(-alpha2 * array)  # (128*128*3600)
+    part21 = b * cp_fdg  
+    part22 = np.exp(-alpha2 * array)  
 
-    # 新卷积方法
-    # CT1 = fftconvolve(part11, part12, mode='full', axes=2)
-    # CT2 = fftconvolve(part21, part22, mode='full', axes=2)
-    # CT1 = CT1[:, :, :T]
-    # CT2 = CT2[:, :, :T]
-
-    # CT = CT1 + CT2
-    # 新卷积方法
+    
     temp_part11 = np.fft.fft(part11)
     temp_part12 = np.fft.fft(part12)
     CT1_temp = np.fft.ifft(temp_part11 * temp_part12)
@@ -403,13 +354,12 @@ def update_tracer_concentration_np(reconstruct_for_k_data, cp_data):
 
 
 def calculate_xm(tms, tme, CPET, lmbda):
-    # print(CPET.shape[2] + 1)
-    t_values = np.arange(0, CPET.shape[2])  # 假设 CPET 包含3600个时间点，可以自行调整
+  
+    t_values = np.arange(0, CPET.shape[2])  
 
-    time_indices = np.where((t_values >= tms) & (t_values <= tme))[0]  # 获取在 tms 和 tme 范围内的时间索引
-    # print(time_indices)
-    CPET_sub = CPET[:, :, time_indices]  # 截取对应时间段的 CPET 数据
-    t_sub = t_values[time_indices]  # 对应的时间值
+    time_indices = np.where((t_values >= tms) & (t_values <= tme))[0] 
+    CPET_sub = CPET[:, :, time_indices] 
+    t_sub = t_values[time_indices]  
 
     integrand = CPET_sub * np.exp(-lmbda * t_sub)
     xm = trapz(integrand, t_sub)

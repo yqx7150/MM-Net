@@ -316,7 +316,7 @@ def compare_ms_ssim(pred, target):
 def compute_mean_loss(reconstruct_for, target_forward_data):
    
     pred_k1, pred_k2, pred_k3, pred_k4 = get_mean_k_data(reconstruct_for)
-    k1, k2, k3, k4 = get_mean_k_data(target_forward_data)  # torch.Size([1, 12, 128, 128])
+    k1, k2, k3, k4 = get_mean_k_data(target_forward_data)  
     loss_k1 = F.mse_loss(pred_k1, k1)
     loss_k2 = F.mse_loss(pred_k2, k2)
     loss_k3 = F.mse_loss(pred_k3, k3)

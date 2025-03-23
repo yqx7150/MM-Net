@@ -22,8 +22,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 
 
 def main():
-    # ======================================define the model============================================
-    # 配置信息
+
     CP_PATH = './data/fdg_zubal_head_sample3_kmin_noise_0423/CP/CP_FDG.mat'
     root2 = "./data/fdg_zubal_head_sample3_kmin_noise_0423/test"
     sampling_intervals = [30, 30, 30, 30, 120, 120, 120, 120, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300]
@@ -42,12 +41,11 @@ def main():
 
         net = MultiOutputReversibleGenerator(input_channels=24, output_channels=24, num_blocks=8)
         device = torch.device("cuda:0")
-        net.to(device)  # 将模型加载到相应的设备中
+        net.to(device)  
         net.eval()
-        # load the pretrained weight if there exists one
-        
+      
         if os.path.isfile(ckpt):
-            net.load_state_dict(torch.load(ckpt), strict=False)  # 加载模型参数
+            net.load_state_dict(torch.load(ckpt), strict=False) 
             print("[INFO] Loaded checkpoint: {}".format(ckpt))
 
         print("[INFO] Start data load and preprocessing")
@@ -72,44 +70,32 @@ def main():
         print("[INFO] Start test...")
         for i_batch, (fdg_batch, fdg_noise_batch, k1_data_batch, k2_data_batch, k3_data_batch, k4_data_batch, ki_data_btach,
                       vb_data_batch) in enumerate(
-            tqdm(test_dataloader)):  # tqdm是一个可以显示进度条的模块。enumerate()函数是python的内置函数，可以同时遍历lt中元素及其索引，i是索引，item是lt中的元素。
-            # k_data_batch = torch.cat(
-            #     (k1_data_batch.squeeze()[:, :, 0].unsqueeze(2), k2_data_batch.squeeze()[:, :, 0].unsqueeze(2),
-            #      k3_data_batch.squeeze()[:, :, 0].unsqueeze(2),
-            #      k4_data_batch.squeeze()[:, :, 0].unsqueeze(2)), dim=2)  # 128x128x4
+            tqdm(test_dataloader)):  
+           
     
-            target_forward_k1_data = k1_data_batch.permute(0, 3, 1, 2).float().cuda()  # [1,12,128,128]
-            target_forward_k2_data = k2_data_batch.permute(0, 3, 1, 2).float().cuda()  # [1,12,128,128]
-            target_forward_k3_data = k3_data_batch.permute(0, 3, 1, 2).float().cuda()  # [1,12,128,128]
-            target_forward_k4_data = k4_data_batch.permute(0, 3, 1, 2).float().cuda()  # [1,12,128,128]
-            target_forward_k_data = torch.cat(  # [1,48,128,128]
+            target_forward_k1_data = k1_data_batch.permute(0, 3, 1, 2).float().cuda()  
+            target_forward_k2_data = k2_data_batch.permute(0, 3, 1, 2).float().cuda()  
+            target_forward_k3_data = k3_data_batch.permute(0, 3, 1, 2).float().cuda()  
+            target_forward_k4_data = k4_data_batch.permute(0, 3, 1, 2).float().cuda()  
+            target_forward_k_data = torch.cat(  
                 (target_forward_k1_data, target_forward_k2_data, target_forward_k3_data, target_forward_k4_data), dim=1)
             target_forward_fdg = fdg_noise_batch.permute(0, 3, 1, 2).float().cuda()  #
             target_forward_fdg_label = fdg_batch.permute(0, 3, 1, 2).float().cuda()
             fdg_input = target_forward_fdg[:, 0:12, :, :]
             fdg_input = torch.cat([fdg_input, fdg_input], dim=1)
     
-            with torch.no_grad():  # 在该模块下，所有计算得出的tensor的requires_grad都自动设置为False。当requires_grad设置为False时,反向传播时就不会自动求导了，因此大大节约了显存或者说内存。
-                reconstruct_for = net(fdg_input)  # hybrid_input [1,2,18,128,128]
+            with torch.no_grad():  
+                reconstruct_for = net(fdg_input)  
             reconstruct_for = torch.abs(reconstruct_for)
-            reconstruct_for = torch.clamp(reconstruct_for, 0, 1)  # torch.Size([1, 96, 128, 128])
-            # k1, k2, k3, k4 = get_mean_k_data(reconstruct_for)
-            # pred_k_data = torch.cat(
-            #     (k1.unsqueeze(2), k2.unsqueeze(2), k3.unsqueeze(2), k4.unsqueeze(2)), dim=2)
-            # pred_fdg_k = pred_k_data.cpu().numpy()
-            # target_fdg_k = k_data_batch.cpu().numpy()
-    
-            ## ki img
+            reconstruct_for = torch.clamp(reconstruct_for, 0, 1)  
+           
     
             pred_ki, pred_vb = calculate_img_patlak3_no_weight(reconstruct_for, target_forward_k_data, sampling_intervals,
                                                               cp_data)
-            # print(target_forward_k_data.shape)
-            # assert 0
-            # pred_ki, pred_vb = calculate_img_patlak3_no_weight_test(reconstruct_for, target_forward_k_data, sampling_intervals,
-            #                                                     cp_data)
+           
     
-            target_forward_ki_label = ki_data_btach.squeeze().numpy()  # 128x128
-            target_forward_vb_label = vb_data_batch.squeeze().numpy()  # 128x128
+            target_forward_ki_label = ki_data_btach.squeeze().numpy() 
+            target_forward_vb_label = vb_data_batch.squeeze().numpy()  
             target_forward_vb_label = abs(target_forward_vb_label)
             pred_ki_data = pred_ki.cpu().numpy()
             pred_vb_data = pred_vb.cpu().numpy()
@@ -125,11 +111,10 @@ def main():
             target_forward_ki_label = normalize_array(target_forward_ki_label)
             target_forward_vb_label = normalize_array(target_forward_vb_label)
     
-            ## ki img
+           
             psnr_fdg_ki = compare_psnr(target_forward_ki_label, pred_ki_data,
-                                       data_range=np.max(target_forward_ki_label))  # )函数返回数字的绝对值。
-            # psnr_fdg_ki = 0
-            # ssim_fdg_ki = 0
+                                       data_range=np.max(target_forward_ki_label))  
+          
             ssim_fdg_ki = compare_ssim(target_forward_ki_label, pred_ki_data, data_range=np.max(target_forward_ki_label))
             mse_fdg_ki = compare_mse(target_forward_ki_label, pred_ki_data)
             ms_ssim_fdg_ki = compare_ms_ssim(abs(target_forward_ki_label), abs(pred_ki_data))
@@ -144,9 +129,9 @@ def main():
             MSE_FDG_KI.append(mse_fdg_ki)
             NRMSE_FDG_KI.append(nrmse_fdg_ki)
     
-            #  保存 result
+          
             os.makedirs(save_path + '/ki/pred_fdg_ki',
-                        exist_ok=True)  # 递归创建目录，题中应有之意即路径中哪一层不存在，则自动创建。如果exist_ok是False（默认），当目标目录（即要创建的目录）已经存在，会抛出一个OSError。
+                        exist_ok=True)  
             os.makedirs(save_path + '/ki/target_fdg_ki', exist_ok=True)
             os.makedirs(save_path + '/ki/pred_fdg_ki_mat', exist_ok=True)
             os.makedirs(save_path + '/ki/target_fdg_ki_mat', exist_ok=True)
@@ -155,15 +140,15 @@ def main():
                      save_path + '/ki/target_fdg_ki' + '/target_fdg_' + str(i_batch + 1) + '.png')
             save_img(pred_ki_data,
                      save_path + '/ki/pred_fdg_ki' + '/pred_fdg_' + str(i_batch + 1) + '.png')
-            # mat
+          
             io.savemat(save_path + '/ki/target_fdg_ki_mat' + '/target_fdg_' + str(i_batch + 1) + '.mat',
                        {'data': target_forward_ki_label})
             io.savemat(save_path + '/ki/pred_fdg_ki_mat' + '/pred_fdg_' + str(i_batch + 1) + '.mat',
                        {'data': pred_ki_data})
     
-            ## vb img
+          
             psnr_fdg_vb = compare_psnr(abs(target_forward_vb_label), abs(pred_vb_data),
-                                       data_range=abs(np.max(target_forward_vb_label)))  # abs()函数返回数字的绝对值。
+                                       data_range=abs(np.max(target_forward_vb_label))) 
             ssim_fdg_vb = compare_ssim(abs(target_forward_vb_label), abs(pred_vb_data),
                                        data_range=abs(np.max(target_forward_vb_label)))
             mse_fdg_vb = compare_mse(target_forward_vb_label, pred_vb_data)
@@ -179,9 +164,9 @@ def main():
             MSE_FDG_VB.append(mse_fdg_vb)
             NRMSE_FDG_VB.append(nrmse_fdg_vb)
     
-            #  保存 result
+          
             os.makedirs(save_path + '/vb/pred_fdg_vb',
-                        exist_ok=True)  # 递归创建目录，题中应有之意即路径中哪一层不存在，则自动创建。如果exist_ok是False（默认），当目标目录（即要创建的目录）已经存在，会抛出一个OSError。
+                        exist_ok=True)  
             os.makedirs(save_path + '/vb/target_fdg_vb', exist_ok=True)
             os.makedirs(save_path + '/vb/pred_fdg_vb_mat', exist_ok=True)
             os.makedirs(save_path + '/vb/target_fdg_vb_mat', exist_ok=True)
@@ -190,7 +175,7 @@ def main():
                         save_path + '/vb/target_fdg_vb' + '/target_fdg_' + str(i_batch + 1) + '.png')
             save_img_vb(pred_vb_data,
                         save_path + '/vb/pred_fdg_vb' + '/pred_fdg_' + str(i_batch + 1) + '.png')
-            # mat
+       
             io.savemat(save_path + '/vb/target_fdg_vb_mat' + '/target_fdg_' + str(i_batch + 1) + '.mat',
                        {'data': target_forward_vb_label})
             io.savemat(save_path + '/vb/pred_fdg_vb_mat' + '/pred_fdg_' + str(i_batch + 1) + '.mat',
@@ -251,15 +236,7 @@ def compare_psnr_show_save(PSNR, SSIM, MSE, MS_SSIM, NRMSE, show_name, save_path
         f.write('ave_nrmse:' + str(ave_nrmse) + ' ' * 3 + 'nrmse_std:' + str(NRMSE_std) + '\n')
 
 def compare_ms_ssim(pred, target):
-    """
-    对数据求ms_ssim指标
-    Args:
-        pred:
-        target:
-
-    Returns:
-
-    """
+   
     pred = tf.convert_to_tensor(pred)
     pred = tf.expand_dims(pred, axis=-1)
 
@@ -273,62 +250,29 @@ def compare_ms_ssim(pred, target):
     result = result.numpy()
     return result
 def save_img(img, img_path):
-    """
-    保存img为白底
-    Args:
-        img:
-        img_path:
-
-    Returns:
-
-    """
+   
     img = np.clip(img * 255, 0,
-                  255)  # np.clip(a,a_min,a_max,out=None)是一个截取函数，用于截取数组中小于或者大于某值的部分，并使得被截取部分等于固定值。该函数的作用是将数组a中的所有数限定到范围a_min和a_max中。a：输入矩阵；a_min：被限定的最小值，所有比a_min小的数都会强制变为a_min；a_max：被限定的最大值，所有比a_max大的数都会强制变为a_max；out：可以指定输出矩阵的对象，shape与a相同
-    img = 255 - img  # 保存为白色为底色的图片
+                  255) 
+    img = 255 - img  
 
     cv2.imwrite(img_path, img)
-    # 将矩阵转换为图像
-    # img = Image.fromarray((img).astype(np.uint8))
-    #
-    # # 创建白色背景图像，并将矩阵图像粘贴在上面
-    # # white_img = Image.new('RGB', (128, 128), color='white')
-    #
-    # # white_img.paste(img, (0, 0), img)
-    #
-    # # 保存图像
-    # img.save(img_path)
-
+    
 
 def save_img_vb(img, img_path):
-    """
-    保存img为白底
-    Args:
-        img:
-        img_path:
-
-    Returns:
-
-    """
+   
     img = np.clip(img * 255, 0,
-                  255)  # np.clip(a,a_min,a_max,out=None)是一个截取函数，用于截取数组中小于或者大于某值的部分，并使得被截取部分等于固定值。该函数的作用是将数组a中的所有数限定到范围a_min和a_max中。a：输入矩阵；a_min：被限定的最小值，所有比a_min小的数都会强制变为a_min；a_max：被限定的最大值，所有比a_max大的数都会强制变为a_max；out：可以指定输出矩阵的对象，shape与a相同
-    img = 255 - img  # 保存为白色为底色的图片
+                  255) 
+    img = 255 - img 
 
     cv2.imwrite(img_path, img)
 
 
 def normalize_array(arr):
-    """
-    最大最小值归一化 对(128,128,18)
-    Args:
-        arr:
-
-    Returns:
-
-    """
+  
     arr_min = np.min(arr)
     arr_max = np.max(arr)
     if arr_max == arr_min:
-        # 分母为零，避免除以零的情况
+       
         normalize_arr = np.zeros_like(arr)
     else:
         normalize_arr = (arr - arr_min) / (arr_max - arr_min)
@@ -336,14 +280,7 @@ def normalize_array(arr):
 
 
 def get_mean_k_data(reconstruct_for):
-    """
-    # get_mean_k_data_np的tensor版本
-    Args:
-        reconstruct_for:
-
-    Returns:
-
-    """
+    
     k1, k2, k3, k4 = torch.split(reconstruct_for, 12, dim=1)
     pred_k1 = torch.mean(k1.squeeze(), dim=0)
     pred_k2 = torch.mean(k2.squeeze(), dim=0)
@@ -353,18 +290,8 @@ def get_mean_k_data(reconstruct_for):
 
 
 def calculate_img_np(reconstruct_for_k_data, sampling_intervals, cp_data):
-    """
-
-    Args:
-        reconstruct_for_k_data: 网络预测的结果
-        sampling_intervals: 采样协议
-        cp_data:血浆
-
-    Returns:预测的18帧图像
-
-    """
-    # 由预测的k1-k4 图像和已知的Cp数据生成预测的18帧的数据
-    reconstruct_for_k_data = reconstruct_for_k_data.cpu().detach().numpy()  # 128,128,12
+  
+    reconstruct_for_k_data = reconstruct_for_k_data.cpu().detach().numpy() 
 
     CP_FDG = cp_data
     pred_CT_FDG = update_tracer_concentration_np(reconstruct_for_k_data, CP_FDG, 0)
@@ -379,7 +306,7 @@ def calculate_img_np(reconstruct_for_k_data, sampling_intervals, cp_data):
         start_index = end_index + 1
 
     pred_fdg = f_FDG / np.max(f_FDG)
-    # pred_fdg = torch.from_numpy(pred_fdg)
+  
     return pred_fdg
 
 
@@ -393,26 +320,9 @@ def get_mean_k_data_np(reconstruct_for):
 
 
 def update_tracer_concentration_np(reconstruct_for_k_data, cp_data, number):
-    """
-    由预测的k1,k2,k3,k4生成预测的TAC曲线
-    Args:
-        reconstruct_for_k_data:
-        cp_data:
-        number:
-
-    Returns:
-
-    """
-    k1, k2, k3, k4 = get_mean_k_data_np(reconstruct_for_k_data)  # 128x128
-    #
-
-    # # 进行最大值最小值归一化
-    # if number == 1:
-    #     k1 = normalize_array(k1)
-    #     k2 = normalize_array(k2)
-    #     k3 = normalize_array(k3)
-    #     k4 = normalize_array(k4)
-
+   
+    k1, k2, k3, k4 = get_mean_k_data_np(reconstruct_for_k_data) 
+   
     k1 = k1 / 60
     k2 = k2 / 60
     k3 = k3 / 60
@@ -420,45 +330,34 @@ def update_tracer_concentration_np(reconstruct_for_k_data, cp_data, number):
 
     cp_fdg = np.array(cp_data[0].tolist())
     discriminant = (k2 + k3 + k4) ** 2 - 4 * k2 * k4
-    discriminant = np.maximum(discriminant, 0)  # 将负值替换为零
+    discriminant = np.maximum(discriminant, 0)  
     alpha1 = (k2 + k3 + k4 - np.sqrt(discriminant)) / 2
     alpha2 = (k2 + k3 + k4 + np.sqrt(discriminant)) / 2
 
     mask = (alpha2 - alpha1) != 0
-    # 计算 a
+   
     a = np.zeros_like(k1)
     a[mask] = k1[mask] * (k3[mask] + k4[mask] - alpha1[mask]) / (alpha2[mask] - alpha1[mask])
-    # 计算 b
+   
     b = np.zeros_like(k1)
     b[mask] = k1[mask] * (alpha2[mask] - k3[mask] - k4[mask]) / (alpha2[mask] - alpha1[mask])
 
-    # alpha1 = (k2 + k3 + k4 - np.sqrt((k2 + k3 + k4) ** 2 - 4 * k2 * k4)) / 2
-    # alpha2 = (k2 + k3 + k4 + np.sqrt((k2 + k3 + k4) ** 2 - 4 * k2 * k4)) / 2
-    # a = k1 * (k3 + k4 - alpha1) / (alpha2 - alpha1)  # a: 128*128
-    # b = k1 * (alpha2 - k3 - k4) / (alpha2 - alpha1)
 
     T = len(cp_fdg)
-    array = np.arange(1, T + 1)  # array:(3600,)
-    array = array.reshape((1, 1, T))  # 1*1*3600
-    a = np.repeat(a[:, :, np.newaxis], T, axis=2)  # a: 128*128*3600
-    b = np.repeat(b[:, :, np.newaxis], T, axis=2)  # b: 128*128*3600
+    array = np.arange(1, T + 1) 
+    array = array.reshape((1, 1, T)) 
+    a = np.repeat(a[:, :, np.newaxis], T, axis=2) 
+    b = np.repeat(b[:, :, np.newaxis], T, axis=2)  
 
     alpha1 = np.repeat(alpha1[:, :, np.newaxis], T, axis=2)
     alpha2 = np.repeat(alpha2[:, :, np.newaxis], T, axis=2)
-    part11 = a * cp_fdg  # (128*128*3600)
-    part12 = np.exp(-alpha1 * array)  # (128*128*3600)
+    part11 = a * cp_fdg  
+    part12 = np.exp(-alpha1 * array) 
 
-    part21 = b * cp_fdg  # (128*128*3600)
-    part22 = np.exp(-alpha2 * array)  # (128*128*3600)
+    part21 = b * cp_fdg  
+    part22 = np.exp(-alpha2 * array) 
 
-    # 新卷积方法
-    # CT1 = fftconvolve(part11, part12, mode='full', axes=2)
-    # CT2 = fftconvolve(part21, part22, mode='full', axes=2)
-    # CT1 = CT1[:, :, :T]
-    # CT2 = CT2[:, :, :T]
-
-    # CT = CT1 + CT2
-    # 新卷积方法
+   
     temp_part11 = np.fft.fft(part11)
     temp_part12 = np.fft.fft(part12)
     CT1_temp = np.fft.ifft(temp_part11 * temp_part12)
@@ -476,13 +375,13 @@ def update_tracer_concentration_np(reconstruct_for_k_data, cp_data, number):
 
 
 def calculate_xm(tms, tme, CPET, lmbda):
-    # print(CPET.shape[2] + 1)
-    t_values = np.arange(0, CPET.shape[2])  # 假设 CPET 包含3600个时间点，可以自行调整
+    
+    t_values = np.arange(0, CPET.shape[2])  
 
-    time_indices = np.where((t_values >= tms) & (t_values <= tme))[0]  # 获取在 tms 和 tme 范围内的时间索引
-    # print(time_indices)
-    CPET_sub = CPET[:, :, time_indices]  # 截取对应时间段的 CPET 数据
-    t_sub = t_values[time_indices]  # 对应的时间值
+    time_indices = np.where((t_values >= tms) & (t_values <= tme))[0]  
+  
+    CPET_sub = CPET[:, :, time_indices]  
+    t_sub = t_values[time_indices]  
 
     integrand = CPET_sub * np.exp(-lmbda * t_sub)
     xm = trapz(integrand, t_sub)
